@@ -8,11 +8,20 @@
 #import "KWMessagePattern.h"
 #import "NSObject+KiwiStubAdditions.h"
 
+static dispatch_queue_t receive_count_queue() {
+    static dispatch_queue_t receive_count_queue;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        receive_count_queue = dispatch_queue_create("com.kiwi.receive_count_queue", DISPATCH_QUEUE_SERIAL);
+    });
+    return receive_count_queue;
+}
+
 @interface KWMessageTracker()
 
 #pragma mark - Properties
 
-@property (nonatomic, assign) NSUInteger receivedCount;
+@property (nonatomic, assign) NSUInteger protectedReceivedCount; // access only via `receive_count_queue()`
 
 @end
 
@@ -99,6 +108,22 @@
 
 - (NSString *)receivedCountPhrase {
     return [self phraseForCount:self.receivedCount];
+}
+
+#pragma mark - Protected Access
+
+- (NSUInteger)receivedCount {
+    __block NSUInteger count;
+    dispatch_sync(receive_count_queue(), ^{
+        count = self.protectedReceivedCount;
+    });
+    return count;
+}
+
+- (void)setReceivedCount:(NSUInteger)receivedCount {
+    dispatch_sync(receive_count_queue(), ^{
+        self.protectedReceivedCount = receivedCount;
+    });
 }
 
 #pragma mark - Debugging
