@@ -16,5 +16,5 @@
 // Obviously, this can only handles cases where Kiwi itself would have raised
 // an exception.
 #if TARGET_IPHONE_SIMULATOR
-    #define KW_TARGET_HAS_INVOCATION_EXCEPTION_BUG 1
+    #define KW_TARGET_HAS_INVOCATION_EXCEPTION_BUG 0
 #endif
